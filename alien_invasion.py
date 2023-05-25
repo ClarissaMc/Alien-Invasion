@@ -91,6 +91,8 @@ class AlienInvasion:
 			self.ship.moving_left = True
 		# Exit if Q
 		elif event.key == pygame.K_q:
+			# Save high score
+			self._save_high_score()
 			sys.exit()
 		# Start if P
 		elif event.key == pygame.K_p and not self.stats.game_active:
@@ -116,9 +118,7 @@ class AlienInvasion:
 		# Reset the game statistics.
 		self.stats.reset_stats()
 		self.stats.game_active = True
-		self.sb.prep_score()
-		self.sb.prep_level()
-		self.sb.prep_ships()
+		self.sb.prep_images()
 
 		# Get rid of the remaining aliens and bullets.
 		self.aliens.empty()
@@ -156,17 +156,21 @@ class AlienInvasion:
 			self.sb.prep_score()
 			self.sb.check_high_score()
 
-		# Remove any bullets and aliens that have collided.
+		# If all aliens are gone, start new level
 		if not self.aliens:
-			# Destroy existing bullets and create new fleet.
-			self.bullets.empty()
-			self._create_fleet()
-			# Increase game speed.
-			self.settings.increase_speed()
+			self._start_new_level()
 
-			# Increase level.
-			self.stats.level += 1
-			self.sb.prep_level()
+	def _start_new_level(self):
+		# Destroy existing bullets and create new fleet.
+		self.bullets.empty()
+		self._create_fleet()
+		
+		# Increase game speed.
+		self.settings.increase_speed()
+
+		# Increase level.
+		self.stats.level += 1
+		self.sb.prep_level()
 
 	def _update_aliens(self):
 		"""
@@ -211,6 +215,7 @@ class AlienInvasion:
 			sleep(0.5)
 		else:
 			self.stats.game_active = False
+			self._save_high_score()
 			pygame.mouse.set_visible(True)
 
 	def _create_fleet(self):
@@ -254,6 +259,11 @@ class AlienInvasion:
 		for alien in self.aliens.sprites():
 			alien.rect.y += self.settings.fleet_drop_speed
 		self.settings.fleet_direction *= -1
+
+	def _save_high_score(self):
+		"""Save the current high score to an external file."""
+		with open('high_score.txt', 'w') as file_object:
+			file_object.write(str(self.stats.high_score))
 
 	def _update_screen(self):
 		"""Update images on the screen, and flip to the new screen."""
