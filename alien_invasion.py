@@ -44,6 +44,7 @@ class AlienInvasion:
 		# Make the Play button.
 		self.play_button = Button(self, "Play")
 
+
 	def run_game(self):
 		"""Start the main loop for the game."""
 		while True:
@@ -93,12 +94,15 @@ class AlienInvasion:
 		elif event.key == pygame.K_q:
 			# Save high score
 			self._save_high_score()
+			pygame.mixer.stop()
+			pygame.mixer.quit()
 			sys.exit()
 		# Start if P
 		elif event.key == pygame.K_p and not self.stats.game_active:
 			self._start_game()
 		# Fire bullet
 		elif event.key == pygame.K_SPACE:
+			self.settings.gun.play()
 			self._fire_bullet()
 
 	def _check_keyup_events(self, event):
@@ -131,6 +135,9 @@ class AlienInvasion:
 		# Hide the mouse cursor.
 		pygame.mouse.set_visible(False)
 
+		# Play start sound.
+		self.settings.game_start.play()
+
 	def _update_bullets(self):
 		"""Update position of bullets and get rid of old bullets."""
 		# Update bullet positions.
@@ -151,6 +158,7 @@ class AlienInvasion:
 
 		# Update score
 		if collisions:
+			self.settings.alien_hit.play()
 			for aliens in collisions.values():
 				self.stats.score += self.settings.alien_points * len(aliens)
 			self.sb.prep_score()
@@ -161,6 +169,9 @@ class AlienInvasion:
 			self._start_new_level()
 
 	def _start_new_level(self):
+		# Play level-up sound.
+		self.settings.new_level.play()
+
 		# Destroy existing bullets and create new fleet.
 		self.bullets.empty()
 		self._create_fleet()
@@ -171,6 +182,9 @@ class AlienInvasion:
 		# Increase level.
 		self.stats.level += 1
 		self.sb.prep_level()
+
+		# Stop sounds
+		#pygame.mixer.stop()
 
 	def _update_aliens(self):
 		"""
@@ -198,6 +212,7 @@ class AlienInvasion:
 
 	def _ship_hit(self):
 		"""Respond to the ship being hit by an alien."""
+		self.settings.ship_hit.play()
 		if self.stats.ships_left > 0:
 			# Decrement ships left, and update scoreboard.
 			self.stats.ships_left -= 1
@@ -212,9 +227,12 @@ class AlienInvasion:
 			self.ship.center_ship()
 
 			# Pause
-			sleep(0.5)
+			sleep(0.9)
 		else:
 			self.stats.game_active = False
+			self.settings.game_over.play()
+			self.settings.gun.stop()
+			self.settings.alien_hit.stop()
 			self._save_high_score()
 			pygame.mouse.set_visible(True)
 
